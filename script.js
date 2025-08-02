@@ -13,6 +13,28 @@ let selectedProducts = [];
 /* Array to store conversation history for context */
 let conversationHistory = [];
 
+/* Load selected products from localStorage on page load */
+function loadSelectedProductsFromStorage() {
+  const savedProducts = localStorage.getItem("selectedProducts");
+  if (savedProducts) {
+    try {
+      selectedProducts = JSON.parse(savedProducts);
+    } catch (error) {
+      console.error("Error loading selected products from storage:", error);
+      selectedProducts = [];
+    }
+  }
+}
+
+/* Save selected products to localStorage */
+function saveSelectedProductsToStorage() {
+  try {
+    localStorage.setItem("selectedProducts", JSON.stringify(selectedProducts));
+  } catch (error) {
+    console.error("Error saving selected products to storage:", error);
+  }
+}
+
 /* Show initial placeholder until user selects a category */
 productsContainer.innerHTML = `
   <div class="placeholder-message">
@@ -100,6 +122,9 @@ function toggleProductSelection(productId, products) {
     selectedProducts.push(product);
   }
 
+  /* Save to localStorage */
+  saveSelectedProductsToStorage();
+
   /* Update visual state of product cards */
   updateProductCardVisuals();
   /* Update selected products display */
@@ -132,9 +157,10 @@ function displaySelectedProducts() {
     return;
   }
 
-  selectedProductsList.innerHTML = selectedProducts
-    .map(
-      (product) => `
+  selectedProductsList.innerHTML =
+    selectedProducts
+      .map(
+        (product) => `
       <div class="selected-product-item">
         <span>${product.name}</span>
         <button class="remove-btn" data-product-id="${product.id}" title="Remove product">
@@ -142,8 +168,15 @@ function displaySelectedProducts() {
         </button>
       </div>
     `
-    )
-    .join("");
+      )
+      .join("") +
+    `
+    <div style="width: 100%; margin-top: 15px;">
+      <button id="clearAllBtn" class="clear-all-btn" title="Clear all selected products">
+        <i class="fa-solid fa-trash"></i> Clear All
+      </button>
+    </div>
+  `;
 
   /* Add click handlers to remove buttons */
   const removeButtons = selectedProductsList.querySelectorAll(".remove-btn");
@@ -154,13 +187,47 @@ function displaySelectedProducts() {
       removeProductFromSelection(productId);
     });
   });
+
+  /* Add click handler to clear all button */
+  const clearAllBtn = document.getElementById("clearAllBtn");
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener("click", clearAllSelectedProducts);
+  }
 }
 
 /* Remove a product from selection */
 function removeProductFromSelection(productId) {
   selectedProducts = selectedProducts.filter((p) => p.id !== productId);
+
+  /* Save to localStorage */
+  saveSelectedProductsToStorage();
+
   updateProductCardVisuals();
   displaySelectedProducts();
+}
+
+/* Clear all selected products */
+function clearAllSelectedProducts() {
+  /* Show confirmation dialog */
+  const confirmed = confirm(
+    "Are you sure you want to clear all selected products?"
+  );
+
+  if (confirmed) {
+    selectedProducts = [];
+
+    /* Save to localStorage */
+    saveSelectedProductsToStorage();
+
+    /* Clear conversation history when clearing products */
+    conversationHistory = [];
+
+    updateProductCardVisuals();
+    displaySelectedProducts();
+
+    /* Clear chat window */
+    chatWindow.innerHTML = "";
+  }
 }
 
 /* Filter and display products when category changes */
@@ -180,6 +247,7 @@ categoryFilter.addEventListener("change", async (e) => {
 });
 
 /* Initialize selected products display */
+loadSelectedProductsFromStorage();
 displaySelectedProducts();
 
 /* Generate routine button click handler */
