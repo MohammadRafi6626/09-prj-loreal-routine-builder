@@ -5,6 +5,17 @@
   padding: 0;
 }
 
+/* —— RTL Support —— */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
 /* —— body + fonts —— */
 body {
   font-family: "Montserrat", Arial, Helvetica, sans-serif;
@@ -34,6 +45,46 @@ body {
   font-size: 22px;
   font-weight: 500;
   margin-bottom: 10px;
+}
+
+/* Language Toggle */
+.language-toggle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.language-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f0f0f0;
+  border: 2px solid #000;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.language-btn:hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+}
+
+.language-btn:focus {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.language-btn i {
+  font-size: 16px;
+}
+
+/* RTL adjustments for language button */
+[dir="rtl"] .language-btn {
+  flex-direction: row-reverse;
 }
 
 /* category filter and search */
@@ -79,6 +130,11 @@ body {
   font-weight: 400;
 }
 
+/* RTL adjustments for search input */
+[dir="rtl"] .search-input {
+  padding: 16px 16px 16px 50px;
+}
+
 .search-input:focus {
   outline: none;
   border-color: #666;
@@ -95,6 +151,12 @@ body {
   color: #666;
   font-size: 18px;
   pointer-events: none;
+}
+
+/* RTL adjustments for search icon */
+[dir="rtl"] .search-icon {
+  right: auto;
+  left: 16px;
 }
 
 /* chat section */
@@ -118,6 +180,49 @@ body {
   overflow-y: auto;
   background: #fafafa;
   margin-bottom: 20px;
+}
+
+/* RTL adjustments for chat messages */
+[dir="rtl"] .chat-window {
+  text-align: right;
+}
+
+/* Chat message styling */
+.chat-message {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.user-message {
+  background: #e8f4f8;
+  border-left: 4px solid #2196f3;
+}
+
+[dir="rtl"] .user-message {
+  border-left: none;
+  border-right: 4px solid #2196f3;
+}
+
+.ai-message {
+  background: #f8f9fa;
+  border-left: 4px solid #28a745;
+}
+
+[dir="rtl"] .ai-message {
+  border-left: none;
+  border-right: 4px solid #28a745;
+}
+
+.error-message {
+  background: #f8d7da;
+  border-left: 4px solid #dc3545;
+  color: #721c24;
+}
+
+[dir="rtl"] .error-message {
+  border-left: none;
+  border-right: 4px solid #dc3545;
 }
 
 /* placeholder message */
@@ -154,6 +259,11 @@ body {
   display: flex;
   gap: 12px;
   margin-top: 16px;
+}
+
+/* RTL adjustments for chat form */
+[dir="rtl"] .chat-form {
+  flex-direction: row-reverse;
 }
 
 .chat-form input {
@@ -249,6 +359,11 @@ body {
   transition: all 0.3s ease;
 }
 
+/* RTL adjustments for product cards */
+[dir="rtl"] .product-card {
+  flex-direction: row-reverse;
+}
+
 .product-card:hover {
   border-color: #000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -272,6 +387,11 @@ body {
   flex-direction: column;
   justify-content: center;
   min-height: 110px;
+}
+
+/* RTL adjustments for product info */
+[dir="rtl"] .product-card .product-info {
+  text-align: right;
 }
 
 .desc-toggle-btn {
@@ -341,6 +461,11 @@ body {
   font-size: 14px;
 }
 
+/* RTL adjustments for selected product items */
+[dir="rtl"] .selected-product-item {
+  flex-direction: row-reverse;
+}
+
 .selected-product-item .remove-btn {
   background: none;
   border: none;
@@ -349,6 +474,12 @@ body {
   font-size: 16px;
   padding: 0;
   margin-left: 4px;
+}
+
+/* RTL adjustments for remove button */
+[dir="rtl"] .selected-product-item .remove-btn {
+  margin-left: 0;
+  margin-right: 4px;
 }
 
 .selected-product-item .remove-btn:hover {
@@ -402,4 +533,10 @@ body {
 
 .generate-btn i {
   margin-right: 8px;
+}
+
+/* RTL adjustments for generate button icon */
+[dir="rtl"] .generate-btn i {
+  margin-right: 0;
+  margin-left: 8px;
 }

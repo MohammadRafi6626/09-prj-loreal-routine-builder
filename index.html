@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,6 +21,14 @@
       <header class="site-header">
         <img src="img/loreal-logo.png" alt="L'Oréal Logo" class="logo" />
         <h1 class="site-title">Smart Routine &amp; Product Advisor</h1>
+
+        <!-- Language Toggle -->
+        <div class="language-toggle" style="margin-top: 15px">
+          <button id="toggleRTL" class="language-btn">
+            <i class="fa-solid fa-language"></i>
+            <span id="languageText">العربية / עברית</span>
+          </button>
+        </div>
       </header>
 
       <!-- Category Filter and Search -->
@@ -96,7 +104,6 @@
     </div>
 
     <!-- secrets.js can be removed when using Cloudflare Workers for API requests -->
-    <script src="secrets.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

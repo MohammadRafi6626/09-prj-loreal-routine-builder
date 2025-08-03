@@ -332,6 +332,123 @@ loadProducts();
 loadSelectedProductsFromStorage();
 displaySelectedProducts();
 
+/* RTL Language Support */
+let isRTL = false;
+
+/* Language toggle functionality */
+function setupLanguageToggle() {
+  const toggleBtn = document.getElementById("toggleRTL");
+  const languageText = document.getElementById("languageText");
+  const htmlElement = document.documentElement;
+
+  toggleBtn.addEventListener("click", () => {
+    isRTL = !isRTL;
+
+    if (isRTL) {
+      // Switch to RTL mode
+      htmlElement.setAttribute("dir", "rtl");
+      htmlElement.setAttribute("lang", "ar"); // Arabic as default RTL language
+      languageText.textContent = "English";
+
+      // Update placeholders for RTL
+      updatePlaceholdersForRTL();
+    } else {
+      // Switch to LTR mode
+      htmlElement.setAttribute("dir", "ltr");
+      htmlElement.setAttribute("lang", "en");
+      languageText.textContent = "العربية / עברית";
+
+      // Update placeholders for LTR
+      updatePlaceholdersForLTR();
+    }
+
+    // Save language preference
+    localStorage.setItem("isRTL", isRTL.toString());
+  });
+}
+
+/* Update placeholders and text for RTL */
+function updatePlaceholdersForRTL() {
+  const searchInput = document.getElementById("productSearch");
+  const chatInput = document.getElementById("userInput");
+  const categoryFilter = document.getElementById("categoryFilter");
+
+  // Update placeholders
+  searchInput.placeholder = "ابحث عن المنتجات بالاسم أو العلامة التجارية...";
+  chatInput.placeholder = "اسأل عن المنتجات أو الروتينات...";
+
+  // Update category options (keeping English for simplicity, but you could translate these)
+  const options = categoryFilter.options;
+  options[0].textContent = "اختر فئة";
+}
+
+/* Update placeholders and text for LTR */
+function updatePlaceholdersForLTR() {
+  const searchInput = document.getElementById("productSearch");
+  const chatInput = document.getElementById("userInput");
+  const categoryFilter = document.getElementById("categoryFilter");
+
+  // Update placeholders
+  searchInput.placeholder = "Search products by name, brand, or keywords...";
+  chatInput.placeholder = "Ask me about products or routines…";
+
+  // Update category options
+  const options = categoryFilter.options;
+  options[0].textContent = "Choose a Category";
+}
+
+/* Load saved language preference */
+function loadLanguagePreference() {
+  const savedRTL = localStorage.getItem("isRTL");
+  if (savedRTL === "true") {
+    // Trigger RTL mode
+    document.getElementById("toggleRTL").click();
+  }
+}
+
+/* Initialize language toggle when page loads */
+document.addEventListener("DOMContentLoaded", () => {
+  setupLanguageToggle();
+  loadLanguagePreference();
+});
+
+/* Test function to check worker response - you can call this in browser console */
+window.testWorker = async function () {
+  try {
+    console.log("Testing worker at:", workerUrl);
+
+    const response = await fetch(workerUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant.",
+          },
+          {
+            role: "user",
+            content: "Say hello in one sentence.",
+          },
+        ],
+      }),
+    });
+
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
+
+    const data = await response.json();
+    console.log("Response data:", data);
+
+    return data;
+  } catch (error) {
+    console.error("Worker test failed:", error);
+    return error;
+  }
+};
+
 /* Generate routine button click handler */
 generateRoutineBtn.addEventListener("click", async () => {
   if (selectedProducts.length === 0) {
@@ -375,6 +492,11 @@ generateRoutineBtn.addEventListener("click", async () => {
       body: JSON.stringify({
         messages: [
           {
+            role: "system",
+            content:
+              "You are a helpful L'Oréal beauty assistant. Create detailed, step-by-step beauty routines using the provided products. Focus on order of application, frequency, and helpful tips.",
+          },
+          {
             role: "user",
             content: `Create a personalized skincare/beauty routine using these selected products: ${JSON.stringify(
               productsData
@@ -390,32 +512,65 @@ generateRoutineBtn.addEventListener("click", async () => {
 
     const data = await response.json();
 
-    /* Display the AI-generated routine in the chat window */
-    if (
-      data.choices &&
-      data.choices[0] &&
-      data.choices[0].message &&
-      data.choices[0].message.content
-    ) {
-      const routine = data.choices[0].message.content;
+    /* Enhanced logging for debugging */
+    console.log("Full API Response:", data);
+    console.log("Response Status:", response.status);
+    console.log("Response Headers:", response.headers);
 
-      /* Add the routine to conversation history */
-      conversationHistory.push({
-        role: "assistant",
-        content: routine,
-      });
-
-      chatWindow.innerHTML = `
-        <div>
-          <h3 style="margin-bottom: 15px; color: #000;">Your Personalized Routine</h3>
-          <div style="white-space: pre-wrap; line-height: 1.6;">
-            ${routine}
-          </div>
-        </div>
-      `;
-    } else {
-      throw new Error("Unexpected response format from API");
+    if (data.choices) {
+      console.log("Choices found:", data.choices.length);
+      console.log("First choice:", data.choices[0]);
     }
+
+    /* Handle different response formats - with or without web search */
+    let routineContent = "";
+
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      const message = data.choices[0].message;
+
+      /* Check if it's a regular message */
+      if (message.content) {
+        routineContent = message.content;
+      } else if (message.tool_calls && message.tool_calls.length > 0) {
+        /* Check if it's a web search response with tool calls */
+        /* Handle web search tool calls */
+        routineContent =
+          "Searching for current information... Please try again in a moment.";
+      } else {
+        /* Check for any other content format */
+        routineContent =
+          "I'm having trouble generating your routine right now. Please try again.";
+      }
+    } else if (data.error) {
+      /* Handle error responses */
+      throw new Error(data.error.message || "API returned an error");
+    } else {
+      /* Handle completely unexpected format */
+      console.error("Unexpected API response format:", data);
+      throw new Error("The API returned an unexpected response format");
+    }
+
+    /* Add the routine to conversation history */
+    conversationHistory.push({
+      role: "assistant",
+      content: routineContent,
+    });
+
+    /* Display the AI-generated routine in the chat window */
+    chatWindow.innerHTML = `
+      <div class="ai-message">
+        <h3 style="margin-bottom: 15px; color: #2d5016; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-sparkles"></i>
+          Your Personalized Routine
+        </h3>
+        <div style="white-space: pre-wrap; line-height: 1.6; color: #333;">
+          ${routineContent}
+        </div>
+      </div>
+    `;
+
+    /* Scroll to show the new content */
+    chatWindow.scrollTop = chatWindow.scrollHeight;
   } catch (error) {
     /* Handle any errors that occur during the API call */
     console.error("Error generating routine:", error);
@@ -426,6 +581,12 @@ generateRoutineBtn.addEventListener("click", async () => {
         <p style="margin-top: 10px; font-size: 14px; color: #666;">
           Error: ${error.message}
         </p>
+        <details style="margin-top: 10px;">
+          <summary style="cursor: pointer; color: #666;">Debug Information</summary>
+          <pre style="background: #f5f5f5; padding: 10px; margin-top: 5px; font-size: 12px; overflow-x: auto;">
+            ${JSON.stringify(error, null, 2)}
+          </pre>
+        </details>
       </div>
     `;
   }
