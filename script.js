@@ -13,6 +13,11 @@ let selectedProducts = [];
 /* Array to store conversation history for context */
 let conversationHistory = [];
 
+/* Variables to track current search and filter state */
+let allProducts = [];
+let currentSearch = "";
+let currentCategory = "";
+
 /* Load selected products from localStorage on page load */
 function loadSelectedProductsFromStorage() {
   const savedProducts = localStorage.getItem("selectedProducts");
@@ -35,18 +40,110 @@ function saveSelectedProductsToStorage() {
   }
 }
 
-/* Show initial placeholder until user selects a category */
+/* Initial loading message */
 productsContainer.innerHTML = `
   <div class="placeholder-message">
-    Select a category to view products
+    Loading products...
   </div>
 `;
 
 /* Load product data from JSON file */
 async function loadProducts() {
-  const response = await fetch("products.json");
-  const data = await response.json();
-  return data.products;
+  try {
+    const response = await fetch("products.json");
+    const data = await response.json();
+    allProducts = data.products; // Store all products for filtering
+    displayProducts(allProducts); // Display all products initially
+    setupEventListeners(); // Setup search and filter listeners
+  } catch (error) {
+    console.error("Error loading products:", error);
+    productsContainer.innerHTML = `
+      <div class="placeholder-message">
+        Error loading products. Please try refreshing the page.
+      </div>
+    `;
+  }
+}
+
+/* Setup event listeners for search and category filter */
+function setupEventListeners() {
+  // Category filter
+  categoryFilter.addEventListener("change", (e) => {
+    currentCategory = e.target.value;
+    filterProducts();
+  });
+
+  // Search input with debounce for better performance
+  const searchInput = document.getElementById("productSearch");
+  let searchTimeout;
+
+  searchInput.addEventListener("input", (e) => {
+    currentSearch = e.target.value.toLowerCase().trim();
+
+    // Clear previous timeout to avoid multiple rapid searches
+    clearTimeout(searchTimeout);
+
+    // Set new timeout for debounced search (waits 300ms after user stops typing)
+    searchTimeout = setTimeout(() => {
+      filterProducts();
+    }, 300);
+  });
+}
+
+/* Filter products based on category and search query */
+function filterProducts() {
+  let filteredProducts = allProducts;
+
+  // Filter by category if selected
+  if (currentCategory) {
+    filteredProducts = filteredProducts.filter(
+      (product) =>
+        product.category.toLowerCase() === currentCategory.toLowerCase()
+    );
+  }
+
+  // Filter by search query if entered
+  if (currentSearch) {
+    filteredProducts = filteredProducts.filter((product) => {
+      // Search in product name, brand, category, and description
+      const searchText = [
+        product.name,
+        product.brand,
+        product.category,
+        product.description,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchText.includes(currentSearch);
+    });
+  }
+
+  // Display results or "no results" message
+  if (filteredProducts.length === 0) {
+    productsContainer.innerHTML = `
+      <div class="placeholder-message">
+        No products found matching your search criteria.
+        <br><br>
+        <button onclick="clearFilters()" class="clear-filters-btn">Clear Filters</button>
+      </div>
+    `;
+  } else {
+    displayProducts(filteredProducts);
+  }
+}
+
+/* Clear all filters and show all products */
+function clearFilters() {
+  currentSearch = "";
+  currentCategory = "";
+
+  // Reset form inputs
+  document.getElementById("productSearch").value = "";
+  document.getElementById("categoryFilter").value = "";
+
+  // Show all products
+  displayProducts(allProducts);
 }
 
 /* Create HTML for displaying product cards */
@@ -230,23 +327,8 @@ function clearAllSelectedProducts() {
   }
 }
 
-/* Filter and display products when category changes */
-categoryFilter.addEventListener("change", async (e) => {
-  const products = await loadProducts();
-  const selectedCategory = e.target.value;
-
-  /* filter() creates a new array containing only products 
-     where the category matches what the user selected */
-  const filteredProducts = products.filter(
-    (product) => product.category === selectedCategory
-  );
-
-  displayProducts(filteredProducts);
-  /* Maintain visual state of selected products after category change */
-  updateProductCardVisuals();
-});
-
-/* Initialize selected products display */
+/* Initialize the application */
+loadProducts();
 loadSelectedProductsFromStorage();
 displaySelectedProducts();
 
